@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: dynamic_end_effector
+    relative_path: urdf/dynamic-ef.urdf.xacro
+    xacro_args: "--inorder "
+  SRDF:
+    relative_path: config/dyn_ef_robot.srdf
+  CONFIG:
+    author_name: Simon Teiwes
+    author_email: simalexteiwes@gmail.com
+    generated_timestamp: 1532525586

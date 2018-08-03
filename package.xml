@@ -27,7 +27,21 @@
   <!-- This package is referenced in the warehouse launch files, but does not build out of the box at the moment. Commented the dependency until this works. -->
   <!-- <run_depend>warehouse_ros_mongo</run_depend> -->
   <build_depend>dynamic_end_effector</build_depend>
+  <build_depend>moveit_core</build_depend>
+  <build_depend>moveit_visual_tools</build_depend>
+  <build_depend>moveit_ros_planning</build_depend>
+  <build_depend>moveit_ros_planning_interface</build_depend>
+  <build_depend>pluginlib</build_depend>
+  <build_depend>geometric_shapes</build_depend>
   <run_depend>dynamic_end_effector</run_depend>
+  <run_depend>moveit_core</run_depend>
+  <run_depend>moveit_visual_tools</run_depend>
+  <run_depend>moveit_ros_planning</run_depend>
+  <run_depend>moveit_ros_planning_interface</run_depend>
+  <run_depend>pluginlib</run_depend>
+  <run_depend>geometric_shapes</run_depend>
+  <run_depend>interactive_markers</run_depend>
+
 
 
 </package>

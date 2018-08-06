@@ -59,19 +59,41 @@ int main(int argc, char** argv)
   // ^^^^^^^^^^^^^^^^^^^^^^^
   // We can plan a motion for this group to a desired pose for the
   // end-effector.
-  geometry_msgs::Pose target_pose1;
-  target_pose1.orientation.w = 1.0;
-  target_pose1.position.x = 0.28;
-  target_pose1.position.y = -0.2;
-  target_pose1.position.z = 0.5;
-  move_group.setPoseTarget(target_pose1);
+  // geometry_msgs::Pose target_pose1;
+  // target_pose1.orientation.w = 1.0;
+  // target_pose1.position.x = 0.28;
+  // target_pose1.position.y = -0.2;
+  // target_pose1.position.z = 0.5;
+  // move_group.setPoseTarget(target_pose1);
+  move_group.setStartStateToCurrentState();
+
+  geometry_msgs::Pose start_pose1;
+  start_pose1.orientation.w = 1.0;
+  start_pose1.orientation.x = 0.3;
+  start_pose1.orientation.y = 0.2;
+  start_pose1.orientation.z = 1.0;
 
   geometry_msgs::Pose start_pose2;
   start_pose2.orientation.w = 1.0;
-  start_pose2.position.x = 0.55;
-  start_pose2.position.y = -0.05;
-  start_pose2.position.z = 0.8;
+  start_pose2.position.x = 0.2;
+  start_pose2.position.y = 0.4;
+  start_pose2.position.z = 1.3;
 
+
+  move_group.setPoseTarget(start_pose1);
+  moveit::planning_interface::MoveGroupInterface::Plan fooPlan;
+  bool success1 = (move_group.plan(fooPlan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  ROS_INFO_STREAM("planned foo: " << success1);
+  success1 = (move_group.execute(fooPlan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  ROS_INFO_STREAM("executed foo: " << success1);
+  sleep(5.0);
+
+  move_group.setPoseTarget(start_pose2);
+  success1 = (move_group.plan(fooPlan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  ROS_INFO_STREAM("planned foo: " << success1);
+  success1 = (move_group.execute(fooPlan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  ROS_INFO_STREAM("executed foo: " << success1);
+  sleep(10.0);
   // Cartesian Paths
   // ^^^^^^^^^^^^^^^
   // You can plan a Cartesian path directly by specifying a list of waypoints
@@ -84,24 +106,28 @@ int main(int argc, char** argv)
 
   geometry_msgs::Pose target_pose3 = start_pose2;
 
-  target_pose3.position.z -= 0.2;
+  target_pose3.position.z += 0.1;
   waypoints.push_back(target_pose3);  // down
 
-  target_pose3.position.y -= 0.2;
+  target_pose3.position.y -= 0.1;
   waypoints.push_back(target_pose3);  // right
 
-  target_pose3.position.z += 0.2;
-  target_pose3.position.y += 0.2;
-  target_pose3.position.x -= 0.2;
+  target_pose3.position.z -= 0.1;
+  target_pose3.position.y += 0.1;
+  // target_pose3.position.x -= 0.1;
   waypoints.push_back(target_pose3);  // up left
   move_group.setMaxVelocityScalingFactor(0.1);
+
+  ROS_INFO_STREAM("Set up Waypoints");
+
+  moveit::planning_interface::MoveGroupInterface::Plan trajectory_plan;
 
   moveit_msgs::RobotTrajectory trajectory;
   const double jump_threshold = 0.0;
   const double eef_step = 0.01;
   double fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
-  my_plan.trajectory_ = trajectory;
-  bool success = (move_group.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  trajectory_plan.trajectory_ = trajectory;
+  bool success = (move_group.execute(trajectory_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
   ROS_INFO_NAMED("tutorial", "Visualizing plan 4 (Cartesian path) (%.2f%% acheived)", fraction * 100.0);
 
   ros::shutdown();

@@ -1,0 +1,11 @@
+<launch>
+    <!-- The visualization component of MoveIt! -->
+    <include file="$(find dynamic_end_effector)/launch/dyn_ef_robot_bringup_gazebo.launch"/> 
+
+    <!-- The visualization component of MoveIt! -->
+    <include file="$(find dyn_ef_moveit)/launch/demo.launch"/>
+
+    <!-- start move_linear_trajectory.cpp -->
+     <node name="move_linear_trajectory_penis" pkg="dyn_ef_moveit" type="move_linear_trajectory" />
+
+</launch> 

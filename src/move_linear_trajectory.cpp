@@ -7,8 +7,6 @@
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/CollisionObject.h>
 
-#include <moveit_visual_tools/moveit_visual_tools.h>
-
 #include <moveit/robot_state/conversions.h>
 
 int main(int argc, char** argv)
@@ -18,11 +16,7 @@ int main(int argc, char** argv)
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
-  // BEGIN_TUTORIAL
-  //
-  // Setup
-  // ^^^^^
-  //
+
   // MoveIt! operates on sets of joints called "planning groups" and stores them in an object called
   // the `JointModelGroup`. Throughout MoveIt! the terms "planning group" and "joint model group"
   // are used interchangably.
@@ -39,23 +33,8 @@ int main(int argc, char** argv)
   // Raw pointers are frequently used to refer to the planning group for improved performance.
   const robot_state::JointModelGroup* joint_model_group = move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 
-  // Visualization
-  // ^^^^^^^^^^^^^
-  //
-  // The package MoveItVisualTools provides many capabilties for visualizing objects, robots,
-  // and trajectories in RViz as well as debugging tools such as step-by-step introspection of a script
-  namespace rvt = rviz_visual_tools;
-  moveit_visual_tools::MoveItVisualTools visual_tools("base_link");
-  visual_tools.deleteAllMarkers();
-
-
-
-  // Getting Basic Information
-  // ^^^^^^^^^^^^^^^^^^^^^^^^^
-  //
   // We can print the name of the reference frame for this robot.
   ROS_INFO_NAMED("tutorial", "Reference frame: %s", move_group.getPlanningFrame().c_str());
-
   // We can also print the name of the end-effector link for this group.
   ROS_INFO_NAMED("tutorial", "End effector link: %s", move_group.getEndEffectorLink().c_str());
 
@@ -89,35 +68,37 @@ int main(int argc, char** argv)
 
   sleep(1.0);
 
-  /*
-  target_pose1.position.x = -0.3;
+  
+  target_pose1.position.y = 0.3;
   move_group.setPoseTarget(target_pose1);
   success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
   ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "SUCCESS" : "FAILED");
   move_group.move();
   sleep(1.0);
 
-  target_pose1.position.y = -0.2;
+  
+  target_pose1.position.x = 0.2;
   move_group.setPoseTarget(target_pose1);
   success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
   ROS_INFO_NAMED("tutorial", "Visualizing plan 2 (pose goal) %s", success ? "SUCCESS" : "FAILED");
   move_group.move();
   sleep(1.0);
 
-  target_pose1.position.x = 0.3;
+  target_pose1.position.y = 0.2;
   move_group.setPoseTarget(target_pose1);
   success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
   ROS_INFO_NAMED("tutorial", "Visualizing plan 3 (pose goal) %s", success ? "SUCCESS" : "FAILED");
   move_group.move();
   sleep(1.0);
+  
 
-  target_pose1.position.y = 0.2;
+  target_pose1.position.x = 0.25;
   move_group.setPoseTarget(target_pose1);
   success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
   ROS_INFO_NAMED("tutorial", "Visualizing plan 4 (pose goal) %s", success ? "SUCCESS" : "FAILED");
   move_group.move();
   sleep(1.0);
-  */
+  
 
 
   while(ros::ok())
@@ -137,22 +118,8 @@ int main(int argc, char** argv)
 
     // set waypoint for the path
     std::vector<geometry_msgs::Pose> waypoints;
-    geometry_msgs::Pose target_pose_cartesian = move_group.getCurrentPose().pose;
+    // geometry_msgs::Pose target_pose_cartesian = move_group.getCurrentPose().pose;
 
-    target_pose_cartesian.position.y = 0.4;
-    waypoints.push_back(target_pose_cartesian);
-
-    target_pose_cartesian.position.x = 0.2;
-    waypoints.push_back(target_pose_cartesian);
-
-    target_pose_cartesian.position.y = 0.2;
-    waypoints.push_back(target_pose_cartesian);
-
-    target_pose_cartesian.position.x = 0.4;
-    waypoints.push_back(target_pose_cartesian);
-
-
-    /* old
     target_pose1.position.y = 0.3;
     waypoints.push_back(target_pose1);
 
@@ -164,13 +131,12 @@ int main(int argc, char** argv)
 
     target_pose1.position.x = 0.3;
     waypoints.push_back(target_pose1);
-    */ 
 
     // Cartesian motions are frequently needed to be slower for actions such as approach and retreat
     // grasp motions. Here we demonstrate how to reduce the speed of the robot arm via a scaling factor
     // of the maxiumum speed of each joint. Note this is not the speed of the end effector point.
     move_group.setMaxVelocityScalingFactor(0.1);
-    move_group.setPlanningTime(30.0);
+    move_group.setPlanningTime(20.0);
 
     // We want the Cartesian path to be interpolated at a resolution of 1 cm
     // which is why we will specify 0.01 as the max step in Cartesian
@@ -179,12 +145,14 @@ int main(int argc, char** argv)
     // large unpredictable motions of redundant joints and could be a safety issue
     moveit_msgs::RobotTrajectory trajectory;
     moveit_msgs::MoveItErrorCodes errCode;
-    const double jump_threshold = 0.05;
+    const double jump_threshold = 0.0;
     const double eef_step = 0.01;
 
     double fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory, true, &errCode);
     ROS_INFO_NAMED("tutorial", "Visualizing plan 5 (Cartesian path) (%.2f%% acheived)", fraction * 100.0);
     ROS_INFO_STREAM("Error Code of Cartesian Path: " << errCode );
+
+    sleep(5.0);
 
     trajectory_plan.trajectory_ = trajectory;
     trajectory_plan.start_state_ = start_state_msg;

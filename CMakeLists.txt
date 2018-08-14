@@ -13,6 +13,8 @@ find_package(catkin REQUIRED
     moveit_ros_planning_interface
     pluginlib
     geometric_shapes
+    apriltags2_ros
+    tf2_ros
 )
 
 ###################################
@@ -33,6 +35,8 @@ catkin_package(
   moveit_visual_tools
   moveit_ros_planning_interface
   interactive_markers
+  apriltags2_ros
+  tf2_ros
 #  DEPENDS system_lib
 )
 
@@ -47,12 +51,15 @@ ${catkin_INCLUDE_DIRS}
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(move_linear_trajectory src/move_linear_trajectory.cpp)
+add_executable(apriltag_pos_control src/apriltag_pos_control.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(move_linear_trajectory
   ${catkin_LIBRARIES}
 )
-
+target_link_libraries(apriltag_pos_control
+  ${catkin_LIBRARIES}
+)
 
 
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

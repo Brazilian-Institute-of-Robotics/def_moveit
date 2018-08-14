@@ -5,9 +5,6 @@
   <arg name="publish_monitored_planning_scene" value="true" />
  </include>
 
- <!-- The visualization component of MoveIt! -->
- <include file="$(find dyn_ef_moveit)/launch/moveit_rviz.launch"/>
-
 </launch>
 
 

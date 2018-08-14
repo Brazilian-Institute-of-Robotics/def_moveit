@@ -3,4 +3,7 @@
 	<!-- moveit launch file -->
   	<include file="$(find dyn_ef_moveit)/launch/moveit_planning_execution.launch" />    
 
+	 <!-- The visualization component of MoveIt! -->
+ 	<include file="$(find dyn_ef_moveit)/launch/moveit_rviz.launch"/>
+
 </launch>

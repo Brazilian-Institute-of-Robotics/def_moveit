@@ -1,0 +1,7 @@
+<launch>
+
+    <!-- <node pkg="dyn_ef_moveit" type="static_tf2_broadcaster" name="static_tf2_broadcaster" /> -->
+
+    <node pkg="dyn_ef_moveit" type="apriltag_pos_control" name="apriltag_pos_control" />
+
+</launch>

@@ -1,20 +1,22 @@
+#include <ros/ros.h>
+
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
-
 #include <moveit_msgs/DisplayRobotState.h>
 #include <moveit_msgs/DisplayTrajectory.h>
-
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/CollisionObject.h>
-
 #include <moveit/robot_state/conversions.h>
 
 #include <apriltags2_ros/AprilTagDetectionArray.h>
 
-#include <ros/ros.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2_ros/static_transform_broadcaster.h>
+#include <tf2/LinearMath/Quaternion.h>
 #include <tf/transform_datatypes.h>
 #include <geometry_msgs/TransformStamped.h>
+
+
 
 int main(int argc, char** argv)
 {
@@ -23,24 +25,30 @@ int main(int argc, char** argv)
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
+
+  // send static reference of frame camera to frame camera_link
+   static tf2_ros::StaticTransformBroadcaster static_broadcaster;
+  geometry_msgs::TransformStamped static_transformStamped;
+  static_transformStamped.header.stamp = ros::Time::now();
+  static_transformStamped.header.frame_id = "camera_link";
+  static_transformStamped.child_frame_id = "camera";
+  static_transformStamped.transform.translation.x = 0.0;
+  static_transformStamped.transform.translation.y = 0.0;
+  static_transformStamped.transform.translation.z = 0.0;
+  static_transformStamped.transform.rotation.x = 0.0;
+  static_transformStamped.transform.rotation.y = 0.0;
+  static_transformStamped.transform.rotation.z = 0.0;
+  static_transformStamped.transform.rotation.w = 1.0;
+  static_broadcaster.sendTransform(static_transformStamped);
+  ROS_INFO("Spinning until killed publishing to world");
+
   // setup move_group interface for position and trajectory control
   static const std::string PLANNING_GROUP = "dyn_ef_arm";
   moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
   const robot_state::JointModelGroup* joint_model_group = move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 
-  tf2_ros::Buffer tfBuffer;
-  tf2_ros::TransformListener tfListener(tfBuffer);
-
-
-  sleep(1.0);
-
-
-
-  // Planning to a Pose goal
-  // ^^^^^^^^^^^^^^^^^^^^^^^
-  // We can plan a motion for this group to a desired pose for the
-  // end-effector.
+  // moving the camera to an initial position to see the apriltag
   tf::Quaternion q;
   geometry_msgs::Quaternion q_msg;
   q = tf::createQuaternionFromRPY(-M_PI_2,M_PI_2,0);
@@ -57,54 +65,27 @@ int main(int argc, char** argv)
   target_pose1.position.z = 1.0;
   move_group.setPoseTarget(target_pose1);
 
+  // planning and executing the arm's movement
   moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-
   bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
   ROS_INFO_STREAM("going to initial position" << success ? "SUCCESS" : "FAILED");
   move_group.move();
 
-
-  sleep(1.0);
-
-  /*
-  target_pose1.position.x = -0.3;
-  move_group.setPoseTarget(target_pose1);
-  success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-  ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "SUCCESS" : "FAILED");
-  move_group.move();
-  sleep(1.0);
-
-  target_pose1.position.y = -0.2;
-  move_group.setPoseTarget(target_pose1);
-  success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-  ROS_INFO_NAMED("tutorial", "Visualizing plan 2 (pose goal) %s", success ? "SUCCESS" : "FAILED");
-  move_group.move();
-  sleep(1.0);
-
-  target_pose1.position.x = 0.3;
-  move_group.setPoseTarget(target_pose1);
-  success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-  ROS_INFO_NAMED("tutorial", "Visualizing plan 3 (pose goal) %s", success ? "SUCCESS" : "FAILED");
-  move_group.move();
-  sleep(1.0);
-
-  target_pose1.position.y = 0.2;
-  move_group.setPoseTarget(target_pose1);
-  success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-  ROS_INFO_NAMED("tutorial", "Visualizing plan 4 (pose goal) %s", success ? "SUCCESS" : "FAILED");
-  move_group.move();
-  sleep(1.0);
-  */
+  // buffer to listen to tf transforms
+  tf2_ros::Buffer tfBuffer;
+  tf2_ros::TransformListener tfListener(tfBuffer);
 
 
   while(ros::ok())
   {
     // get transformation of detected apriltag
     geometry_msgs::TransformStamped transformStamped;
-    try {
-      transformStamped = tfBuffer.lookupTransform("camera", "world",
-                               ros::Time(0));
-    } catch (tf2::TransformException &ex) {
+    try 
+    {
+      transformStamped = tfBuffer.lookupTransform("world", "camera", ros::Time(0));
+    } 
+    catch (tf2::TransformException &ex) 
+    {
       ROS_WARN("%s",ex.what());
       ros::Duration(1.0).sleep();
       continue;
@@ -112,11 +93,7 @@ int main(int argc, char** argv)
 
     ROS_INFO_STREAM("TF is: \n" << transformStamped);
 
-    // vel_msg.angular.z = 4.0 * atan2(transformStamped.transform.translation.y,
-    //                                 transformStamped.transform.translation.x);
-    // vel_msg.linear.x = 0.5 * sqrt(pow(transformStamped.transform.translation.x, 2) +
-    //                               pow(transformStamped.transform.translation.y, 2));
-    // turtle_vel.publish(vel_msg);
+   
 
 
 

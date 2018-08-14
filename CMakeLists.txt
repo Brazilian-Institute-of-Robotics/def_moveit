@@ -15,6 +15,7 @@ find_package(catkin REQUIRED
     geometric_shapes
     apriltags2_ros
     tf2_ros
+    tf2
 )
 
 ###################################
@@ -37,6 +38,7 @@ catkin_package(
   interactive_markers
   apriltags2_ros
   tf2_ros
+  tf2
 #  DEPENDS system_lib
 )
 
@@ -52,12 +54,16 @@ ${catkin_INCLUDE_DIRS}
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(move_linear_trajectory src/move_linear_trajectory.cpp)
 add_executable(apriltag_pos_control src/apriltag_pos_control.cpp)
+add_executable(static_tf2_broadcaster src/static_tf2_broadcaster.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(move_linear_trajectory
   ${catkin_LIBRARIES}
 )
 target_link_libraries(apriltag_pos_control
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(static_tf2_broadcaster
   ${catkin_LIBRARIES}
 )
 

@@ -184,10 +184,11 @@ int main(int argc, char **argv)
                 std::vector<geometry_msgs::Pose> waypoints;
 
                 // new pose
-                closeUpWorld.pose.position.y += 0.2;
+                closeUp.pose.position.z = 0.02;
+                tf2::doTransform(closeUp, closeUpWorld, transformStamped);
                 waypoints.push_back(closeUpWorld.pose);
 
-                // set movement speed slow to carefully press the button
+                // set movement speed to 1/10 to carefully press the button
                 move_group.setMaxVelocityScalingFactor(0.1);
                 move_group.setPlanningTime(30.0);
 

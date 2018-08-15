@@ -1,7 +1,14 @@
 <launch>
 
-    <!-- <node pkg="dyn_ef_moveit" type="static_tf2_broadcaster" name="static_tf2_broadcaster" /> -->
+    <!-- start apriltag detection -->
+    <include file="$(find apriltags2_ros)/launch/continuous_detection.launch" />
 
-    <node pkg="dyn_ef_moveit" type="apriltag_pos_control" name="apriltag_pos_control" />
+    <!-- transform camera frame into world frame -->
+    <node pkg="dyn_ef_moveit" type="static_tf2_broadcaster" name="static_tf2_broadcaster" output="screen"/>
+
+    <!-- start our code -->
+    <node pkg="dyn_ef_moveit" type="apriltag_pos_control" name="apriltag_pos_control" output="screen" />
 
 </launch>
+
+

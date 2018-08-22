@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     // target_pose1.orientation.w = M_PI/2.0;
     target_pose1.position.x = 0.0;
     target_pose1.position.y = 0.0;
-    target_pose1.position.z = 1.2;
+    target_pose1.position.z = 0.5;
     move_group.setPoseTarget(target_pose1);
 
     // planning and executing the arm's movement
@@ -140,6 +140,10 @@ int main(int argc, char **argv)
                 ROS_INFO_STREAM("error - move_group.plan() failed! Could not move to look for camera");
             }
         }
+        else if (goal_reached == true)
+        {
+            ROS_INFO("Goal already reached!");
+        }
         else
         {
             ROS_INFO("found transform to tag_0! trying to approach..");
@@ -158,11 +162,6 @@ int main(int argc, char **argv)
 
             // transform to world coordinates
             tf2::doTransform(closeUp, closeUpWorld, transformStamped);
-
-            // check if we are already close enough to the target
-            // if( == move_group.getCurrentPose()) {
-
-            // }
 
             // set new target pose
             move_group.setPoseTarget(closeUpWorld);
@@ -212,19 +211,37 @@ int main(int argc, char **argv)
                 if (success)
                 {
                     goal_reached = true;
+                    ROS_INFO("Goal reached!");
                 }
+
                 sleep(3.0);
+
+                // go back to old pose
+                std::vector<geometry_msgs::Pose> waypoints_back;
+                closeUp.pose.position.z = 0.2;
+                tf2::doTransform(closeUp, closeUpWorld, transformStamped);
+                waypoints_back.push_back(closeUpWorld.pose);
+
+                // get current pose
+                // moveit::core::RobotStatePtr current_state = move_group.getCurrentState();
+                // moveit::core::RobotState start_state_core = *(current_state.get());
+                moveit::core::robotStateToRobotStateMsg(*(move_group.getCurrentState().get()), start_state_msg, false);
+
+                // compute cartesian path
+                fraction = move_group.computeCartesianPath(waypoints_back, eef_step, jump_threshold, trajectory, true, &errCode);
+                ROS_INFO("Calculated %.2f%% of the Cartesian Path back to old pose", fraction * 100.0);
+                ROS_INFO_STREAM("Error Code of Cartesian Path: " << errCode);
+
+                // filling trajectory with information and trying to execute
+                trajectory_plan.trajectory_ = trajectory;
+                trajectory_plan.start_state_ = start_state_msg;
+                trajectory_plan.planning_time_ = 0.666;
+                success = (move_group.execute(trajectory_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+                ROS_INFO("Executing Cartesian path back to old pose %s", success ? "Succeeded" : "FAILED");
             }
             else
             {
-                if (goal_reached == true)
-                {
-                    ROS_INFO("Goal reached!");
-                }
-                else
-                {
-                    ROS_INFO("error - move_group.plan() failed!");
-                }
+                ROS_INFO("error - move_group.plan() failed!");
             }
         }
 

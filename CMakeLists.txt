@@ -7,6 +7,10 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED
   COMPONENTS
+    control_msgs
+    genmsg
+    actionlib_msgs
+    actionlib
     moveit_core
     moveit_visual_tools
     moveit_ros_planning
@@ -17,6 +21,10 @@ find_package(catkin REQUIRED
     tf2_ros
     tf2
 )
+
+
+add_action_files(DIRECTORY action FILES ExecuteTrajectory.action)
+generate_messages(DEPENDENCIES actionlib_msgs control_msgs)
 
 ###################################
 ## catkin specific configuration ##

@@ -71,13 +71,14 @@ int main(int argc, char **argv)
     // target_pose1.orientation.w = M_PI/2.0;
     target_pose1.position.x = 0.0;
     target_pose1.position.y = 0.0;
-    target_pose1.position.z = 0.5;
+    target_pose1.position.z = 0.4;
     move_group.setPoseTarget(target_pose1);
+    move_group.setPlanningTime(40.0);
 
     // planning and executing the arm's movement
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-    ROS_INFO_STREAM("going to initial position" << success ? "SUCCESS" : "FAILED");
+    ROS_INFO_STREAM("going to initial position " << success ? "SUCCESS" : "FAILED");
     move_group.move();
 
     // buffer to listen to tf transforms
@@ -111,7 +112,7 @@ int main(int argc, char **argv)
         // if no recent position data of tag0 is received, move the camera around
         if (!trExists || ros::Time::now() - transformStamped.header.stamp > ros::Duration(10.0))
         {
-            ROS_INFO_STREAM("found no known transform for tag_0, moving robot to find tag_0!");
+            ROS_WARN("found no known transform for tag_0, moving robot to find tag_0!");
 
             // look around and find apriltag
             geometry_msgs::PoseStamped pCurr = move_group.getCurrentPose();
@@ -137,7 +138,7 @@ int main(int argc, char **argv)
             }
             else
             {
-                ROS_INFO_STREAM("error - move_group.plan() failed! Could not move to look for camera");
+                ROS_WARN("error - move_group.plan() failed! Could not move to look for camera");
             }
         }
         else if (goal_reached == true)
@@ -241,7 +242,7 @@ int main(int argc, char **argv)
             }
             else
             {
-                ROS_INFO("error - move_group.plan() failed!");
+                ROS_WARN("error - move_group.plan() failed!");
             }
         }
 

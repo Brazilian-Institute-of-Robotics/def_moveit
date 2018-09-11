@@ -8,8 +8,8 @@ joint_limits:
     has_acceleration_limits: false
     max_acceleration: 0
   base_yaw_link_to_first_link_joint:
-    has_velocity_limits: true
-    max_velocity: 1
+    has_velocity_limits: false
+    max_velocity: 0
     has_acceleration_limits: false
     max_acceleration: 0
   first_link_to_second_link_joint:

@@ -7,6 +7,7 @@
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/CollisionObject.h>
 #include <moveit/robot_state/conversions.h>
+#include <moveit_visual_tools/moveit_visual_tools.h>
 
 #include <apriltags2_ros/AprilTagDetectionArray.h>
 
@@ -56,6 +57,14 @@ int main(int argc, char **argv)
     ROS_INFO("Add the ground plane into the world");
     planning_scene_interface.addCollisionObjects(collision_objects);
 
+    // tool to step through the code in rviz
+    namespace rvt = rviz_visual_tools;
+    moveit_visual_tools::MoveItVisualTools visual_tools("base_link");
+    visual_tools.deleteAllMarkers();
+    visual_tools.loadRemoteControl();
+    visual_tools.trigger();
+    visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to start the code");
+
     // moving the camera to an initial position to see the apriltag
     tf::Quaternion q;
     geometry_msgs::Quaternion q_msg;
@@ -79,6 +88,10 @@ int main(int argc, char **argv)
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
     ROS_INFO_STREAM("going to initial position " << success ? "SUCCESS" : "FAILED");
+    // wait for user
+    visual_tools.trigger();
+    visual_tools.prompt("Press 'next' to start looking around for the apriltag");
+    // move when user confirmed movement
     move_group.move();
 
     // buffer to listen to tf transforms
@@ -133,6 +146,9 @@ int main(int argc, char **argv)
             moveit::planning_interface::MoveGroupInterface::Plan my_plan;
             if (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
             {
+                // wait for user
+                visual_tools.trigger();
+                visual_tools.prompt("Press 'next' to continue looking around for the apriltag");
                 move_group.move();
                 ROS_INFO_STREAM("success - turned camera");
             }
@@ -167,10 +183,13 @@ int main(int argc, char **argv)
             // set new target pose
             move_group.setPoseTarget(closeUpWorld);
 
-            // planning and executing the arm's movement
+            // planning and executing the arm's movement to the apriltag
             moveit::planning_interface::MoveGroupInterface::Plan my_plan;
             if ((move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS) == true && goal_reached == false)
             {
+                // wait for user
+                visual_tools.trigger();
+                visual_tools.prompt("Press 'next' to start aproaching the apriltag");
                 move_group.move();
                 ROS_INFO("success - moved to approaching point");
 
@@ -202,6 +221,11 @@ int main(int argc, char **argv)
                 ROS_INFO("Calculated %.2f%% of the Cartesian Path", fraction * 100.0);
                 ROS_INFO_STREAM("Error Code of Cartesian Path: " << errCode);
 
+                // wait for user
+                visual_tools.trigger();
+                visual_tools.prompt("Press 'next' to start the cartesian path");
+                ROS_INFO("path might be not shown in rviz");
+
                 // filling trajectory with information and trying to execute
                 trajectory_plan.trajectory_ = trajectory;
                 trajectory_plan.start_state_ = start_state_msg;
@@ -232,6 +256,11 @@ int main(int argc, char **argv)
                 fraction = move_group.computeCartesianPath(waypoints_back, eef_step, jump_threshold, trajectory, true, &errCode);
                 ROS_INFO("Calculated %.2f%% of the Cartesian Path back to old pose", fraction * 100.0);
                 ROS_INFO_STREAM("Error Code of Cartesian Path: " << errCode);
+
+                // wait for user
+                visual_tools.trigger();
+                visual_tools.prompt("Press 'next' to return after pressing the button");
+                ROS_INFO("path might be not shown in rviz");
 
                 // filling trajectory with information and trying to execute
                 trajectory_plan.trajectory_ = trajectory;

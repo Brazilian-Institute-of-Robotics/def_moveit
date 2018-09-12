@@ -4,31 +4,31 @@
 joint_limits:
   base_link_to_base_yaw_link_joint:
     has_velocity_limits: true
-    max_velocity: 0.2
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 0.9
+    has_acceleration_limits: true
+    max_acceleration: 0.3
   base_yaw_link_to_first_link_joint:
     has_velocity_limits: true
-    max_velocity: 0.2
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 0.9
+    has_acceleration_limits: true
+    max_acceleration: 0.3
   first_link_to_second_link_joint:
     has_velocity_limits: true
-    max_velocity: 0.2
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 0.9
+    has_acceleration_limits: true
+    max_acceleration: 0.3
   fourth_link_to_fifth_link_joint:
     has_velocity_limits: true
-    max_velocity: 0.2
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 1.4
+    has_acceleration_limits: true
+    max_acceleration: 0.3
   second_link_to_third_link_joint:
     has_velocity_limits: true
-    max_velocity: 0.4
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 1.4
+    has_acceleration_limits: true
+    max_acceleration: 0.3
   third_link_to_fourth_link_joint:
     has_velocity_limits: true
-    max_velocity: 0.45
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 1.4
+    has_acceleration_limits: true
+    max_acceleration: 0.3

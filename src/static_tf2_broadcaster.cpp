@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
     static_transformStamped.header.stamp = ros::Time::now();
     static_transformStamped.header.frame_id = "camera_link";
-    static_transformStamped.child_frame_id = "camera";
+    static_transformStamped.child_frame_id = "camera1";
     static_transformStamped.transform.translation.x = 0.0;
     static_transformStamped.transform.translation.y = 0.0;
     static_transformStamped.transform.translation.z = 0.0;

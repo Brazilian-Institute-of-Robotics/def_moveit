@@ -65,11 +65,15 @@ int main(int argc, char **argv)
     visual_tools.trigger();
     visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to start the code");
 
+
+    // set velocity scaling to 1
+    move_group.setMaxVelocityScalingFactor(0.6);
+
     // moving the camera to an initial position to see the apriltag
     tf::Quaternion q;
     geometry_msgs::Quaternion q_msg;
     // q = tf::createQuaternionFromRPY(-M_PI_2,M_PI_2,0);
-    q = tf::createQuaternionFromRPY(-M_PI_2 - 0.2, 0, -M_PI_2);
+    q = tf::createQuaternionFromRPY(-M_PI_2 - 0.2, 0, -M_PI);
     tf::quaternionTFToMsg(q, q_msg);
 
     geometry_msgs::Pose target_pose1;
@@ -80,7 +84,8 @@ int main(int argc, char **argv)
     // target_pose1.orientation.w = M_PI/2.0;
     target_pose1.position.x = 0.0;
     target_pose1.position.y = 0.0;
-    target_pose1.position.z = 0.4;
+    target_pose1.position.z = 0.5;
+    move_group.setStartStateToCurrentState();
     move_group.setPoseTarget(target_pose1);
     move_group.setPlanningTime(40.0);
 
@@ -93,17 +98,26 @@ int main(int argc, char **argv)
     visual_tools.prompt("Press 'next' to start looking around for the apriltag");
     // move when user confirmed movement
     move_group.move();
+    ROS_INFO_STREAM("finished moving to initial pose!");
 
     // buffer to listen to tf transforms
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener(tfBuffer);
+    // let tfBuffer listen to transform
+    sleep(1.0);
+
+    // pose for going back after pressing button (because the apriltag is not visible while pressing)
+    geometry_msgs::PoseStamped prePressPose;
 
     bool goal_reached = false;
+
+    geometry_msgs::TransformStamped transformStamped;
+    // set header.stamp to current time to wait at least 10 seconds to find the apriltag
+    transformStamped.header.stamp = ros::Time::now();
 
     while (ros::ok())
     {
         bool trExists = false;
-        geometry_msgs::TransformStamped transformStamped;
 
         if (tfBuffer._frameExists("tag_0"))
         {
@@ -112,6 +126,7 @@ int main(int argc, char **argv)
             try
             {
                 transformStamped = tfBuffer.lookupTransform("world", "tag_0", ros::Time(0));
+                ROS_INFO_STREAM("looked up transform!");
             }
             catch (tf2::TransformException &ex)
             {
@@ -140,6 +155,7 @@ int main(int argc, char **argv)
             pCurr.header.stamp = ros::Time::now();
 
             // set new target pose
+            move_group.setStartStateToCurrentState();
             move_group.setPoseTarget(pCurr);
 
             // planning and executing the arm's movement
@@ -159,7 +175,18 @@ int main(int argc, char **argv)
         }
         else if (goal_reached == true)
         {
-            ROS_INFO("Goal already reached!");
+            ROS_INFO("Goal already reached! Going to home pos.. bye!");
+            if (move_group.setNamedTarget("home_position")) {
+                move_group.setStartStateToCurrentState();
+                moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+                if (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS) {
+                    // wait for user
+                    visual_tools.prompt("Press 'next' to go home and chill out..");
+                    visual_tools.trigger();
+                    move_group.move();
+                    return 0;
+                }
+            }
         }
         else
         {
@@ -169,7 +196,7 @@ int main(int argc, char **argv)
             geometry_msgs::PoseStamped closeUp, closeUpWorld;
             closeUp.pose.position.x = 0.0;
             closeUp.pose.position.y = 0.0;
-            closeUp.pose.position.z = 0.4;
+            closeUp.pose.position.z = 0.35;
             geometry_msgs::Quaternion q_msg;
             tf::Quaternion qt = tf::createQuaternionFromRPY(M_PI, 0, 0);
             quaternionTFToMsg(qt, q_msg);
@@ -180,11 +207,17 @@ int main(int argc, char **argv)
             // transform to world coordinates
             tf2::doTransform(closeUp, closeUpWorld, transformStamped);
 
+            // save pose to go back later when the apriltag is not visible
+            prePressPose = closeUpWorld;
+
             // set new target pose
+            move_group.setStartStateToCurrentState();
             move_group.setPoseTarget(closeUpWorld);
 
             // planning and executing the arm's movement to the apriltag
             moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+
+
             if ((move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS) == true && goal_reached == false)
             {
                 // wait for user
@@ -192,6 +225,24 @@ int main(int argc, char **argv)
                 visual_tools.prompt("Press 'next' to start aproaching the apriltag");
                 move_group.move();
                 ROS_INFO("success - moved to approaching point");
+
+                // now we are closer, check again to get more precise transform
+                if (tfBuffer._frameExists("tag_0"))
+                {
+                    trExists = true;
+                    // get transformation of detected apriltag
+                    try
+                    {
+                        transformStamped = tfBuffer.lookupTransform("world", "tag_0", ros::Time(0));
+                    }
+                    catch (tf2::TransformException &ex)
+                    {
+                        ROS_WARN("%s", ex.what());
+                        ros::Duration(1.0).sleep();
+                        trExists = false;
+                        continue;
+                    }
+                }
 
                 moveit::planning_interface::MoveGroupInterface::Plan trajectory_plan;
                 moveit::core::RobotStatePtr current_state = move_group.getCurrentState();
@@ -203,12 +254,12 @@ int main(int argc, char **argv)
                 std::vector<geometry_msgs::Pose> waypoints;
 
                 // new pose
-                closeUp.pose.position.z = 0.02;
+                closeUp.pose.position.z = 0.05;
                 tf2::doTransform(closeUp, closeUpWorld, transformStamped);
                 waypoints.push_back(closeUpWorld.pose);
 
                 // set movement speed to 1/10 to carefully press the button
-                move_group.setMaxVelocityScalingFactor(0.1);
+                //move_group.setMaxVelocityScalingFactor(0.1);
                 move_group.setPlanningTime(30.0);
 
                 // computing the cartesian path
@@ -224,7 +275,6 @@ int main(int argc, char **argv)
                 // wait for user
                 visual_tools.trigger();
                 visual_tools.prompt("Press 'next' to start the cartesian path");
-                ROS_INFO("path might be not shown in rviz");
 
                 // filling trajectory with information and trying to execute
                 trajectory_plan.trajectory_ = trajectory;
@@ -243,9 +293,9 @@ int main(int argc, char **argv)
 
                 // go back to old pose
                 std::vector<geometry_msgs::Pose> waypoints_back;
-                closeUp.pose.position.z = 0.2;
-                tf2::doTransform(closeUp, closeUpWorld, transformStamped);
-                waypoints_back.push_back(closeUpWorld.pose);
+                // closeUp.pose.position.z = 0.2;
+                // tf2::doTransform(closeUp, closeUpWorld, transformStamped);
+                waypoints_back.push_back(prePressPose.pose);
 
                 // get current pose
                 // moveit::core::RobotStatePtr current_state = move_group.getCurrentState();

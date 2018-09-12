@@ -3,32 +3,32 @@
 # Joint limits can be turned off with [has_velocity_limits, has_acceleration_limits]
 joint_limits:
   base_link_to_base_yaw_link_joint:
-    has_velocity_limits: false
-    max_velocity: 0
+    has_velocity_limits: true
+    max_velocity: 0.2
     has_acceleration_limits: false
     max_acceleration: 0
   base_yaw_link_to_first_link_joint:
-    has_velocity_limits: false
-    max_velocity: 0
+    has_velocity_limits: true
+    max_velocity: 0.2
     has_acceleration_limits: false
     max_acceleration: 0
   first_link_to_second_link_joint:
-    has_velocity_limits: false
-    max_velocity: 0
+    has_velocity_limits: true
+    max_velocity: 0.2
     has_acceleration_limits: false
     max_acceleration: 0
   fourth_link_to_fifth_link_joint:
-    has_velocity_limits: false
-    max_velocity: 0
+    has_velocity_limits: true
+    max_velocity: 0.2
     has_acceleration_limits: false
     max_acceleration: 0
   second_link_to_third_link_joint:
-    has_velocity_limits: false
-    max_velocity: 0
+    has_velocity_limits: true
+    max_velocity: 0.4
     has_acceleration_limits: false
     max_acceleration: 0
   third_link_to_fourth_link_joint:
-    has_velocity_limits: false
-    max_velocity: 0
+    has_velocity_limits: true
+    max_velocity: 0.45
     has_acceleration_limits: false
     max_acceleration: 0

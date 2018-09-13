@@ -60,14 +60,10 @@ ${catkin_INCLUDE_DIRS}
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(move_linear_trajectory src/move_linear_trajectory.cpp)
 add_executable(apriltag_pos_control src/apriltag_pos_control.cpp)
 add_executable(static_tf2_broadcaster src/static_tf2_broadcaster.cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(move_linear_trajectory
-  ${catkin_LIBRARIES}
-)
 target_link_libraries(apriltag_pos_control
   ${catkin_LIBRARIES}
 )

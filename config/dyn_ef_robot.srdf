@@ -27,6 +27,15 @@
         <joint name="second_link_to_third_link_joint" value="1.57" />
         <joint name="third_link_to_fourth_link_joint" value="0" />
     </group_state>
+
+    <group_state name="zero_position" group="dyn_ef_arm">
+        <joint name="base_link_to_base_yaw_link_joint" value="0" />
+        <joint name="base_yaw_link_to_first_link_joint" value="0" />
+        <joint name="first_link_to_second_link_joint" value="0" />
+        <joint name="fourth_link_to_fifth_link_joint" value="0" />
+        <joint name="second_link_to_third_link_joint" value="0" />
+        <joint name="third_link_to_fourth_link_joint" value="0" />
+    </group_state>
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
     <!-- <end_effector name="finger" parent_link="fourth_link" group="dyn_ef_arm" /> -->
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->

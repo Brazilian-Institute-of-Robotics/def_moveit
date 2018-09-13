@@ -76,6 +76,19 @@ int main(int argc, char **argv)
     q = tf::createQuaternionFromRPY(-M_PI_2 - 0.2, 0, -M_PI);
     tf::quaternionTFToMsg(q, q_msg);
 
+    // first of all got to home position, in case the arm is lying on the bumper
+    if (move_group.setNamedTarget("home_position")) {
+        move_group.setStartStateToCurrentState();
+        moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+        if (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS) {
+            // wait for user
+            visual_tools.prompt("Press 'next' to go to home position..");
+            visual_tools.trigger();
+            move_group.move();
+        }
+    }
+
+
     geometry_msgs::Pose target_pose1;
     target_pose1.orientation = q_msg;
     // target_pose1.orientation.x = -1.0;
@@ -110,6 +123,7 @@ int main(int argc, char **argv)
     geometry_msgs::PoseStamped prePressPose;
 
     bool goal_reached = false;
+    bool try_again = false;
 
     geometry_msgs::TransformStamped transformStamped;
     // set header.stamp to current time to wait at least 10 seconds to find the apriltag
@@ -118,6 +132,22 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         bool trExists = false;
+
+        if (goal_reached)
+        {
+            ROS_INFO("Goal already reached! Going to home pos.. bye!");
+            if (move_group.setNamedTarget("home_position")) {
+                move_group.setStartStateToCurrentState();
+                moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+                if (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS) {
+                    // wait for user
+                    visual_tools.prompt("Press 'next' to go home and chill out..");
+                    visual_tools.trigger();
+                    move_group.move();
+                    return 0;
+                }
+            }
+        }
 
         if (tfBuffer._frameExists("tag_0"))
         {
@@ -133,7 +163,7 @@ int main(int argc, char **argv)
                 ROS_WARN("%s", ex.what());
                 ros::Duration(1.0).sleep();
                 trExists = false;
-                continue;
+                //continue;
             }
         }
 
@@ -146,7 +176,7 @@ int main(int argc, char **argv)
             geometry_msgs::PoseStamped pCurr = move_group.getCurrentPose();
             tf::Quaternion q_rot, q_orig, q_new;
             geometry_msgs::Quaternion q_msg_new;
-            q_rot = tf::createQuaternionFromRPY(0, 0, M_PI / 6.0);
+            q_rot = tf::createQuaternionFromRPY(0, 0, M_PI / 8.0);
             quaternionMsgToTF(pCurr.pose.orientation, q_orig);
             q_new = q_rot * q_orig;
             q_new.normalize();
@@ -173,20 +203,9 @@ int main(int argc, char **argv)
                 ROS_WARN("error - move_group.plan() failed! Could not move to look for camera");
             }
         }
-        else if (goal_reached == true)
+        else if (goal_reached)
         {
-            ROS_INFO("Goal already reached! Going to home pos.. bye!");
-            if (move_group.setNamedTarget("home_position")) {
-                move_group.setStartStateToCurrentState();
-                moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-                if (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS) {
-                    // wait for user
-                    visual_tools.prompt("Press 'next' to go home and chill out..");
-                    visual_tools.trigger();
-                    move_group.move();
-                    return 0;
-                }
-            }
+            continue;
         }
         else
         {
@@ -196,7 +215,7 @@ int main(int argc, char **argv)
             geometry_msgs::PoseStamped closeUp, closeUpWorld;
             closeUp.pose.position.x = 0.0;
             closeUp.pose.position.y = 0.0;
-            closeUp.pose.position.z = 0.35;
+            closeUp.pose.position.z = 0.4;
             geometry_msgs::Quaternion q_msg;
             tf::Quaternion qt = tf::createQuaternionFromRPY(M_PI, 0, 0);
             quaternionTFToMsg(qt, q_msg);
@@ -242,6 +261,33 @@ int main(int argc, char **argv)
                         trExists = false;
                         continue;
                     }
+                } else {
+                    // go a bit back to hopefully find apriltag
+                    // closeUp.pose.position.z -= 0.07;
+                    // tf2::doTransform(closeUp, closeUpWorld, transformStamped);
+                    // move_group.setStartStateToCurrentState();
+                    // move_group.setPoseTarget(closeUpWorld);
+                    // moveit::planning_interface::MoveGroupInterface::Plan my_plan1;
+                    // if (move_group.plan(my_plan1) == moveit::planning_interface::MoveItErrorCode::SUCCESS) {
+                    //     move_group.move();
+                    // }
+                    // // check another time
+                    // if (tfBuffer._frameExists("tag_0"))
+                    // {
+                    //     trExists = true;
+                    //     // get transformation of detected apriltag
+                    //     try
+                    //     {
+                    //         transformStamped = tfBuffer.lookupTransform("world", "tag_0", ros::Time(0));
+                    //     }
+                    //     catch (tf2::TransformException &ex)
+                    //     {
+                    //         ROS_WARN("%s", ex.what());
+                    //         ros::Duration(1.0).sleep();
+                    //         trExists = false;
+                    //         continue;
+                    //     }
+                    // }
                 }
 
                 moveit::planning_interface::MoveGroupInterface::Plan trajectory_plan;
@@ -253,8 +299,20 @@ int main(int argc, char **argv)
                 // set waypoint for the path
                 std::vector<geometry_msgs::Pose> waypoints;
 
-                // new pose
-                closeUp.pose.position.z = 0.05;
+                // compute cartesian path to button
+                closeUp.pose.position.x -= 0.04;
+                tf2::doTransform(closeUp, closeUpWorld, transformStamped);
+                waypoints.push_back(closeUpWorld.pose);
+
+                closeUp.pose.position.y = 0.09;
+                tf2::doTransform(closeUp, closeUpWorld, transformStamped);
+                waypoints.push_back(closeUpWorld.pose);
+
+                closeUp.pose.position.z = 0.052;
+                tf2::doTransform(closeUp, closeUpWorld, transformStamped);
+                waypoints.push_back(closeUpWorld.pose);
+
+                closeUp.pose.position.z += 0.05;
                 tf2::doTransform(closeUp, closeUpWorld, transformStamped);
                 waypoints.push_back(closeUpWorld.pose);
 
@@ -279,14 +337,18 @@ int main(int argc, char **argv)
                 // filling trajectory with information and trying to execute
                 trajectory_plan.trajectory_ = trajectory;
                 trajectory_plan.start_state_ = start_state_msg;
-                trajectory_plan.planning_time_ = 0.666;
+                trajectory_plan.planning_time_ = 0.1337;
                 success = (move_group.execute(trajectory_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
                 ROS_INFO("Executing Cartesian path %s", success ? "Succeeded" : "FAILED");
                 // set flag if cartesian path was executed successfully
-                if (success)
+                if (success && fraction >= 1)
                 {
                     goal_reached = true;
                     ROS_INFO("Goal reached!");
+                } else {
+                    ROS_INFO("SORRY! Could not compute cartesian path, trying to start over from prePressPose ;-)");
+                    try_again == true;
+                    continue;
                 }
 
                 sleep(3.0);
@@ -325,7 +387,7 @@ int main(int argc, char **argv)
             }
         }
 
-        sleep(1.0);
+        //sleep(1.0);
     }
 
     ros::shutdown();

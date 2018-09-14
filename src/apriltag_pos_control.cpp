@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     tf::Quaternion q;
     geometry_msgs::Quaternion q_msg;
     // q = tf::createQuaternionFromRPY(-M_PI_2,M_PI_2,0);
-    q = tf::createQuaternionFromRPY(-M_PI_2 - 0.2, 0, -M_PI);
+    q = tf::createQuaternionFromRPY(-M_PI_2 - 0.78, 0, -M_PI);
     tf::quaternionTFToMsg(q, q_msg);
 
     // first of all got to home position, in case the arm is lying on the bumper
@@ -142,6 +142,17 @@ int main(int argc, char **argv)
                 if (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS) {
                     // wait for user
                     visual_tools.prompt("Press 'next' to go home and chill out..");
+                    visual_tools.trigger();
+                    move_group.move();
+                }
+            }
+            ROS_INFO("Should I go to the rest position, so you can turn off the controller?");
+            if (move_group.setNamedTarget("rest_position")) {
+                move_group.setStartStateToCurrentState();
+                moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+                if (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS) {
+                    // wait for user
+                    visual_tools.prompt("Press 'next' to rest in peace :-P");
                     visual_tools.trigger();
                     move_group.move();
                     return 0;
@@ -244,6 +255,7 @@ int main(int argc, char **argv)
                 visual_tools.prompt("Press 'next' to start aproaching the apriltag");
                 move_group.move();
                 ROS_INFO("success - moved to approaching point");
+                sleep(1.0);
 
                 // now we are closer, check again to get more precise transform
                 if (tfBuffer._frameExists("tag_0"))
@@ -300,15 +312,15 @@ int main(int argc, char **argv)
                 std::vector<geometry_msgs::Pose> waypoints;
 
                 // compute cartesian path to button
-                closeUp.pose.position.x -= 0.04;
+                closeUp.pose.position.x += 0.092;
                 tf2::doTransform(closeUp, closeUpWorld, transformStamped);
                 waypoints.push_back(closeUpWorld.pose);
 
-                closeUp.pose.position.y = 0.09;
+                closeUp.pose.position.y = 0.026;
                 tf2::doTransform(closeUp, closeUpWorld, transformStamped);
                 waypoints.push_back(closeUpWorld.pose);
 
-                closeUp.pose.position.z = 0.052;
+                closeUp.pose.position.z = 0.052+0.031-0.016;
                 tf2::doTransform(closeUp, closeUpWorld, transformStamped);
                 waypoints.push_back(closeUpWorld.pose);
 

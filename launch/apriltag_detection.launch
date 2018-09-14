@@ -4,6 +4,7 @@
     <include file="$(find apriltags2_ros)/launch/continuous_detection.launch" />
 
     <!-- transform camera frame into world frame -->
+    <!-- this node maps the camera to its child frame in the robot (camera_link) -->
     <node pkg="dyn_ef_moveit" type="static_tf2_broadcaster" name="static_tf2_broadcaster" output="screen"/>
 
     <!-- start our code -->

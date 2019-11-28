@@ -312,11 +312,11 @@ int main(int argc, char **argv)
                 std::vector<geometry_msgs::Pose> waypoints;
 
                 // compute cartesian path to button
-                closeUp.pose.position.x += 0.092;
+                closeUp.pose.position.x += 0.055;
                 tf2::doTransform(closeUp, closeUpWorld, transformStamped);
                 waypoints.push_back(closeUpWorld.pose);
 
-                closeUp.pose.position.y = 0.026;
+                closeUp.pose.position.y = 0.013;
                 tf2::doTransform(closeUp, closeUpWorld, transformStamped);
                 waypoints.push_back(closeUpWorld.pose);
 
